@@ -1,8 +1,314 @@
-:root{font-family:system-ui,sans-serif;background:linear-gradient(#e0ecff,#f8fafc);color:#0f172a}
-*{box-sizing:border-box}body{margin:0}.container{max-width:480px;margin:0 auto;min-height:100vh;padding:16px;display:grid;gap:16px}
-.topbar{display:flex;justify-content:space-between;align-items:center;background:#ffffffd8;padding:12px 14px;border-radius:18px;box-shadow:0 3px 12px #0001}
-.brand{display:flex;align-items:center;gap:8px}.brand h1{margin:0;font-size:1.25rem}.status{text-align:right}.status strong{display:block;font-size:1.4rem}
-.section h2{margin:0 0 8px;font-size:1.1rem}.card{background:#fff;border:0;width:100%;padding:16px;border-radius:20px;box-shadow:0 4px 14px #0002;text-align:left}
-.head{display:flex;justify-content:space-between;align-items:flex-start}.time{font-size:3rem;letter-spacing:.02em}.eta{text-align:right}.eta strong{display:block;font-size:1.8rem}
-.routeRow{display:flex;justify-content:space-between;align-items:center;margin-top:10px;gap:8px}.route{background:#2563eb;color:#fff;border-radius:999px;padding:4px 10px;font-weight:700}
-.note{font-size:.88rem;color:#475569;margin-top:6px}.empty{color:#64748b}.soon{color:#dc2626}
+:root {
+  --bg-top: #dcecff;
+  --bg-mid: #f8fbff;
+  --bg-bottom: #ddf7eb;
+  --text-main: #111827;
+  --text-sub: #4b5563;
+  --line-soft: #e5e7eb;
+  --card-bg: rgba(255, 255, 255, 0.76);
+  --card-border: rgba(255, 255, 255, 0.62);
+  --shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+  --indigo: #4f46e5;
+  --emerald: #10b981;
+  --alert: #ef4444;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  color: var(--text-main);
+  font-family: "Hiragino Kaku Gothic ProN", "Yu Gothic", "Noto Sans JP", sans-serif;
+  background: linear-gradient(180deg, var(--bg-top) 0%, var(--bg-mid) 45%, var(--bg-bottom) 100%);
+}
+
+.container {
+  max-width: 460px;
+  min-height: 100vh;
+  margin: 0 auto;
+  padding: 20px 16px 36px;
+  display: grid;
+  gap: 24px;
+}
+
+.topbar {
+  border: 1px solid var(--card-border);
+  background: var(--card-bg);
+  border-radius: 22px;
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(12px);
+  padding: 8px 10px;
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: center;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.brand h1 {
+  margin: 0;
+  font-size: 1.02rem;
+  letter-spacing: 0.01em;
+}
+
+.brand-icon {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: var(--indigo);
+  color: #fff;
+  display: grid;
+  place-items: center;
+  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+}
+
+.icon {
+  width: 17px;
+  height: 17px;
+}
+
+.status {
+  text-align: right;
+  display: grid;
+  gap: 2px;
+}
+
+.day-chip {
+  display: inline-block;
+  margin-left: auto;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #374151;
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 999px;
+  padding: 3px 8px;
+}
+
+.status strong {
+  font-size: 1.15rem;
+  line-height: 1;
+  letter-spacing: 0.02em;
+  font-variant-numeric: tabular-nums;
+}
+
+.section {
+  display: grid;
+  gap: 12px;
+}
+
+.section-title {
+  margin: 0;
+  font-size: 1.18rem;
+  letter-spacing: 0.01em;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.dot {
+  width: 11px;
+  height: 11px;
+  border-radius: 999px;
+}
+
+.section-title.indigo .dot {
+  background: var(--indigo);
+}
+
+.section-title.emerald .dot {
+  background: var(--emerald);
+}
+
+.card {
+  width: 100%;
+  border: 1px solid var(--card-border);
+  background: var(--card-bg);
+  border-radius: 32px;
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(12px);
+  overflow: hidden;
+}
+
+.card.clickable {
+  border-color: var(--card-border);
+  cursor: pointer;
+  text-align: left;
+  padding: 0;
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.card.clickable:hover {
+  box-shadow: 0 14px 30px rgba(15, 23, 42, 0.14);
+  transform: translateY(-1px);
+}
+
+.strip {
+  height: 8px;
+}
+
+.card.indigo .strip,
+.section-title.indigo + .card .route-chip {
+  background: var(--indigo);
+}
+
+.card.emerald .strip,
+.section-title.emerald + .card .route-chip {
+  background: var(--emerald);
+}
+
+.card-body {
+  padding: 20px;
+}
+
+.head {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  align-items: flex-start;
+}
+
+.time {
+  font-size: clamp(3.1rem, 16vw, 4.2rem);
+  line-height: 1;
+  letter-spacing: 0.01em;
+  font-variant-numeric: tabular-nums;
+}
+
+.eta {
+  text-align: right;
+  display: grid;
+  gap: 3px;
+  padding-top: 6px;
+  color: var(--text-sub);
+}
+
+.eta span {
+  font-size: 0.84rem;
+  font-weight: 700;
+}
+
+.eta strong {
+  font-size: 2rem;
+  line-height: 1;
+  color: #334155;
+  font-variant-numeric: tabular-nums;
+}
+
+.eta small {
+  font-size: 1.3rem;
+  margin-left: 2px;
+}
+
+.card.indigo .eta strong {
+  color: #4f46e5;
+}
+
+.card.emerald .eta strong {
+  color: #059669;
+}
+
+.eta.soon,
+.eta.soon strong {
+  color: var(--alert);
+}
+
+.divider {
+  margin: 14px 0;
+  border-top: 1px solid var(--line-soft);
+}
+
+.route-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+.left-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.route-chip {
+  color: #fff;
+  border-radius: 14px;
+  font-size: 0.88rem;
+  font-weight: 700;
+  padding: 8px 11px;
+  line-height: 1;
+}
+
+.platform {
+  font-size: 0.96rem;
+  font-weight: 700;
+  color: #1f2937;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.arrive {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: #6b7280;
+  font-size: 0.9rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.flag {
+  width: 18px;
+  height: 18px;
+}
+
+.hint {
+  margin: 12px 0 0;
+  color: #9ca3af;
+  font-size: 0.75rem;
+  text-align: right;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.card.clickable:hover .hint {
+  opacity: 1;
+}
+
+.empty {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #4b5563;
+}
+
+@media (max-width: 420px) {
+  .topbar {
+    border-radius: 18px;
+  }
+
+  .card {
+    border-radius: 24px;
+  }
+
+  .brand h1 {
+    font-size: 0.98rem;
+  }
+
+  .status strong {
+    font-size: 1.05rem;
+  }
+
+  .route-row {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
