@@ -9,7 +9,7 @@ const STATION_LABEL = {
 const SECTION_CONFIG = {
   SAGAMI_ONO_TO_KITASATO: {
     title: '相模大野駅北口 発',
-    accent: 'indigo',
+    accent: 'primary',
     origin: STATION_LABEL.sagamiono,
     destination: STATION_LABEL.kitasato,
     platformPrefix: STATION_LABEL.sagamiono,
@@ -17,7 +17,7 @@ const SECTION_CONFIG = {
   },
   KITASATO_TO_SAGAMI_ONO: {
     title: '北里大学病院 発',
-    accent: 'emerald',
+    accent: 'secondary',
     origin: STATION_LABEL.kitasato,
     destination: STATION_LABEL.sagamiono,
     platformPrefix: STATION_LABEL.kitasato,
@@ -128,6 +128,37 @@ function pickNext(trips, nowMinutes) {
   return candidates[0] || null;
 }
 
+function pickNextN(trips, nowMinutes, count = 2) {
+  const candidates = [];
+
+  for (const trip of trips) {
+    for (const depTime of trip.times) {
+      const depMins = hhmmToMins(depTime);
+      candidates.push({
+        trip,
+        depTime,
+        depMins,
+        etaMins: eta(nowMinutes, depMins),
+        arrTime: minsToHHMM(depMins + trip.durationMins)
+      });
+    }
+  }
+
+  candidates.sort((a, b) => a.etaMins - b.etaMins || a.depMins - b.depMins || a.trip.route.localeCompare(b.trip.route, 'ja'));
+
+  const uniqueCandidates = [];
+  const seen = new Set();
+  for (const cand of candidates) {
+    const key = `${cand.depTime}-${cand.trip.route}`;
+    if (!seen.has(key)) {
+      uniqueCandidates.push(cand);
+      seen.add(key);
+    }
+  }
+
+  return uniqueCandidates.slice(0, count);
+}
+
 function departureEpoch(depTime, now) {
   const [h, m] = depTime.split(':').map(Number);
   const d = new Date(now);
@@ -177,7 +208,7 @@ function topBar(dayType, clock) {
     </div>
     <div class="status">
       <span class="day-chip">${DAY_LABEL[dayType]}</span>
-      <strong>${clock}</strong>
+      <strong class="clock">${clock}</strong>
     </div>
   `;
   return top;
@@ -193,10 +224,12 @@ function emptyCard(accent) {
   return empty;
 }
 
-function busCard(direction, nextBus, accent) {
-  const card = document.createElement('button');
-  card.className = `card clickable ${accent}`;
-  card.onclick = () => window.open(mapsUrl(direction, nextBus.depTime), '_blank', 'noopener,noreferrer');
+function busCard(direction, nextBus, accent, options = { clickable: true, secondary: false }) {
+  const card = document.createElement(options.clickable ? 'button' : 'div');
+  card.className = `card ${options.clickable ? 'clickable' : 'static'} ${options.secondary ? 'secondary-style' : ''} ${accent}`;
+  if (options.clickable) {
+    card.onclick = () => window.open(mapsUrl(direction, nextBus.depTime), '_blank', 'noopener,noreferrer');
+  }
 
   const platformLabel = `${SECTION_CONFIG[direction].platformPrefix} ${nextBus.trip.platform}`;
   const isSoon = nextBus.etaMins <= 2;
@@ -234,7 +267,15 @@ function section(direction, nextBus) {
   title.innerHTML = `<span class="dot"></span>${cfg.title}`;
 
   wrapper.append(title);
-  wrapper.append(nextBus ? busCard(direction, nextBus, cfg.accent) : emptyCard(cfg.accent));
+  if (!nextBus || !nextBus.length) {
+    wrapper.append(emptyCard(cfg.accent));
+    return wrapper;
+  }
+
+  wrapper.append(busCard(direction, nextBus[0], cfg.accent, { clickable: true, secondary: false }));
+  if (nextBus[1]) {
+    wrapper.append(busCard(direction, nextBus[1], cfg.accent, { clickable: false, secondary: true }));
+  }
 
   return wrapper;
 }
@@ -253,8 +294,8 @@ function render() {
   }
 
   const minute = nowMins(state.now);
-  const nextS2K = pickNext(state.timetables.SAGAMI_ONO_TO_KITASATO[dayType] || [], minute);
-  const nextK2S = pickNext(state.timetables.KITASATO_TO_SAGAMI_ONO[dayType] || [], minute);
+  const nextS2K = pickNextN(state.timetables.SAGAMI_ONO_TO_KITASATO[dayType] || [], minute, 2);
+  const nextK2S = pickNextN(state.timetables.KITASATO_TO_SAGAMI_ONO[dayType] || [], minute, 2);
 
   root.append(section('SAGAMI_ONO_TO_KITASATO', nextS2K));
   root.append(section('KITASATO_TO_SAGAMI_ONO', nextK2S));
