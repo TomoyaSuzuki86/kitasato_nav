@@ -1,4 +1,4 @@
-const CACHE_NAME = 'kitasato-nav-v3';
+const CACHE_NAME = 'kitasato-nav-v4';
 const APP_SHELL = [
   '/',
   '/index.html',
