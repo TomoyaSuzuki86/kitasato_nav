@@ -1,0 +1,8 @@
+:root{font-family:system-ui,sans-serif;background:linear-gradient(#e0ecff,#f8fafc);color:#0f172a}
+*{box-sizing:border-box}body{margin:0}.container{max-width:480px;margin:0 auto;min-height:100vh;padding:16px;display:grid;gap:16px}
+.topbar{display:flex;justify-content:space-between;align-items:center;background:#ffffffd8;padding:12px 14px;border-radius:18px;box-shadow:0 3px 12px #0001}
+.brand{display:flex;align-items:center;gap:8px}.brand h1{margin:0;font-size:1.25rem}.status{text-align:right}.status strong{display:block;font-size:1.4rem}
+.section h2{margin:0 0 8px;font-size:1.1rem}.card{background:#fff;border:0;width:100%;padding:16px;border-radius:20px;box-shadow:0 4px 14px #0002;text-align:left}
+.head{display:flex;justify-content:space-between;align-items:flex-start}.time{font-size:3rem;letter-spacing:.02em}.eta{text-align:right}.eta strong{display:block;font-size:1.8rem}
+.routeRow{display:flex;justify-content:space-between;align-items:center;margin-top:10px;gap:8px}.route{background:#2563eb;color:#fff;border-radius:999px;padding:4px 10px;font-weight:700}
+.note{font-size:.88rem;color:#475569;margin-top:6px}.empty{color:#64748b}.soon{color:#dc2626}
