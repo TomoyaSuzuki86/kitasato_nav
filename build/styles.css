@@ -318,6 +318,18 @@ body {
   font-weight: 700;
   padding: 6px 8px;
   line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+.route-short {
+  flex: 0 0 auto;
+}
+
+.route-dest {
+  flex: 0 0 auto;
 }
 
 .platform {

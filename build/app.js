@@ -12,7 +12,6 @@ const SECTION_CONFIG = {
     accent: 'primary',
     origin: STATION_LABEL.sagamiono,
     destination: STATION_LABEL.kitasato,
-    platformPrefix: STATION_LABEL.sagamiono,
     includeRoutes: new Set(['大53', '大55', '大59', '大68', '相25', '大15'])
   },
   KITASATO_TO_SAGAMI_ONO: {
@@ -20,7 +19,6 @@ const SECTION_CONFIG = {
     accent: 'secondary',
     origin: STATION_LABEL.kitasato,
     destination: STATION_LABEL.sagamiono,
-    platformPrefix: STATION_LABEL.kitasato,
     includeRoutes: new Set(['大15', '大25', '大53', '大59', '大68', '相25'])
   }
 };
@@ -245,7 +243,7 @@ function busCard(direction, nextBus, accent, options = { clickable: true, second
     card.onclick = () => window.open(mapsUrl(direction, nextBus.depTime), '_blank', 'noopener,noreferrer');
   }
 
-  const platformLabel = `${SECTION_CONFIG[direction].platformPrefix} ${nextBus.trip.platform}`;
+  const platformLabel = nextBus.trip.platform;
   const isSoon = nextBus.etaMins <= 2;
 
   card.innerHTML = `
@@ -261,13 +259,17 @@ function busCard(direction, nextBus, accent, options = { clickable: true, second
       <div class="divider"></div>
       <div class="route-row">
         <div class="left-meta">
-          <span class="route-chip">${nextBus.trip.route}</span>
+          <span class="route-chip expanded">
+            <span class="route-short">${nextBus.trip.route}</span>
+            <span class="route-dest">${nextBus.trip.label}</span>
+          </span>
           <span class="platform">${platformLabel}</span>
         </div>
         <div class="arrive">${flagIcon()}<span>${nextBus.arrTime}着</span></div>
       </div>
     </div>
   `;
+
   return card;
 }
 
