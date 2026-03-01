@@ -18,6 +18,8 @@
   --secondary-dark: #059669; /* emerald-600 */
   --secondary-text: #fff;
   --alert: #ef4444; /* red-500 */
+  --muted-main: #64748b; /* slate-500 */
+  --muted-sub: #94a3b8; /* slate-400 */
 }
 
 @media (prefers-color-scheme: dark) {
@@ -36,6 +38,8 @@
     /* Theme Colors (Dark) */
     --primary-dark: #38bdf8; /* sky-400 */
     --secondary-dark: #34d399; /* emerald-400 */
+    --muted-main: #94a3b8; /* slate-400 */
+    --muted-sub: #cbd5e1; /* slate-300 */
   }
 }
 
@@ -170,6 +174,8 @@ body {
   width: 100%;
   border: 1px solid var(--card-border);
   background: var(--card-bg);
+  font-family: inherit;
+  color: var(--text-main);
   border-radius: 16px;
   box-shadow: var(--shadow);
   backdrop-filter: blur(16px);
@@ -179,6 +185,10 @@ body {
 }
 
 .card.clickable {
+  appearance: none;
+  -webkit-appearance: none;
+  font: inherit;
+  color: inherit;
   cursor: pointer;
   text-align: left;
   padding: 0;
@@ -189,7 +199,20 @@ body {
 }
 
 .card.secondary-style {
-  opacity: 0.8;
+  background: rgba(148, 163, 184, 0.12);
+  border-color: rgba(148, 163, 184, 0.28);
+  color: var(--muted-main);
+}
+
+.card.secondary-style .time,
+.card.secondary-style .platform,
+.card.secondary-style .eta strong {
+  color: var(--muted-main);
+}
+
+.card.secondary-style .arrive,
+.card.secondary-style .eta span {
+  color: var(--muted-sub);
 }
 
 .card.clickable:hover {

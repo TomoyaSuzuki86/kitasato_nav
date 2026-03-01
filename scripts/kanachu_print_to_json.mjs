@@ -5,6 +5,10 @@ import path from "node:path";
 import { URL, fileURLToPath } from "node:url";
 
 const BASE = "https://www.kanachu.co.jp";
+const STOP_NID = {
+  sagamiono: "00114298",
+  kitasato: "00129119",
+};
 
 const ROUTES = [
   {
@@ -14,7 +18,7 @@ const ROUTES = [
     fromStop: "sagamiono",
     toStop: "kitasato",
     platform: "1",
-    approxDurationMins: 25,
+    approxDurationMins: 28,
     printUrl:
       "https://www.kanachu.co.jp/dia/diagram/printdate/cs:0000803517-1/nid:00114298/chk:all/dts:1772215200",
   },
@@ -25,7 +29,7 @@ const ROUTES = [
     fromStop: "sagamiono",
     toStop: "kitasato",
     platform: "1",
-    approxDurationMins: 23,
+    approxDurationMins: 27,
     printUrl:
       "https://www.kanachu.co.jp/dia/diagram/printdate/cs:0000801899-1/nid:00114298/chk:all/dts:1772215200",
   },
@@ -36,7 +40,7 @@ const ROUTES = [
     fromStop: "sagamiono",
     toStop: "kitasato",
     platform: "3",
-    approxDurationMins: 22,
+    approxDurationMins: 26,
     printUrl:
       "https://www.kanachu.co.jp/dia/diagram/printdate/cs:0000804124-1/nid:00114298/chk:all/dts:1772215200",
   },
@@ -47,7 +51,7 @@ const ROUTES = [
     fromStop: "sagamiono",
     toStop: "kitasato",
     platform: "3",
-    approxDurationMins: 21,
+    approxDurationMins: 26,
     printUrl:
       "https://www.kanachu.co.jp/dia/diagram/printdate/cs:0000804047-1/nid:00114298/chk:all/dts:1772215200",
   },
@@ -58,7 +62,7 @@ const ROUTES = [
     fromStop: "sagamiono",
     toStop: "kitasato",
     platform: "1",
-    approxDurationMins: 17,
+    approxDurationMins: 24,
     printUrl:
       "https://www.kanachu.co.jp/dia/diagram/printdate/cs:0000803498-1/nid:00114298/chk:all/dts:1772215200",
   },
@@ -69,7 +73,7 @@ const ROUTES = [
     fromStop: "sagamiono",
     toStop: "kitasato",
     platform: "1",
-    approxDurationMins: 18,
+    approxDurationMins: 24,
     printUrl:
       "https://www.kanachu.co.jp/dia/diagram/printdate/cs:0000803499-1/nid:00114298/chk:all/dts:1772215200",
   },
@@ -80,7 +84,7 @@ const ROUTES = [
     fromStop: "kitasato",
     toStop: "sagamiono",
     platform: "3",
-    approxDurationMins: 24,
+    approxDurationMins: 29,
     printUrl:
       "https://www.kanachu.co.jp/dia/diagram/printdate/cs:0000804219-1/nid:00129119/chk:all/dts:1772215200",
   },
@@ -91,7 +95,7 @@ const ROUTES = [
     fromStop: "kitasato",
     toStop: "sagamiono",
     platform: "4",
-    approxDurationMins: 25,
+    approxDurationMins: 30,
     printUrl:
       "https://www.kanachu.co.jp/dia/diagram/printdate/cs:0000803500-26/nid:00129119/chk:all/dts:1772215200",
   },
@@ -102,7 +106,7 @@ const ROUTES = [
     fromStop: "kitasato",
     toStop: "sagamiono",
     platform: "4",
-    approxDurationMins: 24,
+    approxDurationMins: 29,
     printUrl:
       "https://www.kanachu.co.jp/dia/diagram/printdate/cs:0000803513-10/nid:00129119/chk:all/dts:1772215200",
   },
@@ -113,7 +117,7 @@ const ROUTES = [
     fromStop: "kitasato",
     toStop: "sagamiono",
     platform: "4",
-    approxDurationMins: 28,
+    approxDurationMins: 31,
     printUrl:
       "https://www.kanachu.co.jp/dia/diagram/printdate/cs:0000803506-1/nid:00129119/chk:all/dts:1772215200",
   },
@@ -124,7 +128,7 @@ const ROUTES = [
     fromStop: "kitasato",
     toStop: "sagamiono",
     platform: "4",
-    approxDurationMins: 26,
+    approxDurationMins: 30,
     printUrl:
       "https://www.kanachu.co.jp/dia/diagram/printdate/cs:0000803503-3/nid:00129119/chk:all/dts:1772215200",
   },
@@ -135,7 +139,7 @@ const ROUTES = [
     fromStop: "kitasato",
     toStop: "sagamiono",
     platform: "4",
-    approxDurationMins: 22,
+    approxDurationMins: 27,
     printUrl:
       "https://www.kanachu.co.jp/dia/diagram/printdate/cs:0000803498-12/nid:00129119/chk:all/dts:1772215200",
   },
@@ -257,6 +261,170 @@ async function ensureValidPrintUrl(url) {
   return { finalUrl: res.url, html: await res.text() };
 }
 
+function dayTypeFromTm(tm) {
+  const ymd = tm.slice(0, 10);
+  const day = new Date(`${ymd}T00:00:00`).getDay();
+  if (day === 6) return "saturday";
+  if (day === 0) return "holiday";
+  return "weekday";
+}
+
+function depTimeFromTm(tm) {
+  return tm.slice(11, 16);
+}
+
+function parseDurationFromRouteHtml(html) {
+  const m = /所要時間は約\s*([0-9]+)\s*分/.exec(html);
+  if (!m) return null;
+  return Number(m[1]);
+}
+
+function parseDurationToTargetByParts(html, targetNid) {
+  const liRe = /<li id="(\d+)-\d+"[\s\S]*?<\/li>/g;
+  let total = 0;
+  for (const m of html.matchAll(liRe)) {
+    const nid = m[1];
+    const li = m[0];
+    const part = /<p class="part">(?:約)?\s*([0-9]+)\s*分\//.exec(li);
+    if (part) total += Number(part[1]);
+    if (nid === targetNid) {
+      return total > 0 ? total : null;
+    }
+  }
+  return null;
+}
+
+function parseArrivalAtNidFromRouteHtml(html, nid) {
+  const reArr = new RegExp(
+    `<li id="${nid}-\\d+"[\\s\\S]*?<p class="timetable[^"]*">[\\s\\S]*?(\\d{1,2}:\\d{2})<span>着<\\/span>`,
+    "i"
+  );
+  const mArr = reArr.exec(html);
+  if (mArr) return mArr[1];
+
+  const reAny = new RegExp(
+    `<li id="${nid}-\\d+"[\\s\\S]*?<p class="timetable[^"]*">[\\s\\S]*?(\\d{1,2}:\\d{2})<span>(?:着|発)<\\/span>`,
+    "i"
+  );
+  const mAny = reAny.exec(html);
+  return mAny ? mAny[1] : null;
+}
+
+function diffMinutes(depHHMM, arrHHMM) {
+  const [dh, dm] = depHHMM.split(":").map(Number);
+  const [ah, am] = arrHHMM.split(":").map(Number);
+  const dep = dh * 60 + dm;
+  const arr = ah * 60 + am;
+  return arr >= dep ? arr - dep : 1440 - dep + arr;
+}
+
+function parseRouteIndexLinks(html) {
+  const links = extractHrefPaths(
+    html,
+    /^\/dia\/route\/index\/(?:cid:[^"']+\/ssnid:\d+\/sn:\d+\/tm:[^/]+\/op:[^/]+\/|cid:\d+\/dts:\d+)\/?$/
+  );
+  return Array.from(new Set(links));
+}
+
+function parseTimetable01Path(html) {
+  const links = extractHrefPaths(
+    html,
+    /^\/dia\/diagram\/timetable01\/cs:\d+-\d+\/rt:\d+\/nid:\d+\/dts:\d+$/
+  );
+  return links[0] ?? null;
+}
+
+function buildTimetableUrlFromPrintUrl(printUrl) {
+  const m = /\/printdate\/cs:(\d+-\d+)\/nid:(\d+)\//.exec(printUrl);
+  if (!m) return null;
+  return `${BASE}/dia/diagram/timetable/cs:${m[1]}/nid:${m[2]}`;
+}
+
+function median(nums) {
+  if (!nums.length) return null;
+  const s = [...nums].sort((a, b) => a - b);
+  const mid = Math.floor(s.length / 2);
+  if (s.length % 2 === 1) return s[mid];
+  return Math.round((s[mid - 1] + s[mid]) / 2);
+}
+
+async function fetchDurationByTimeFromOfficial(route, timetable) {
+  const out = { weekday: {}, saturday: {}, holiday: {} };
+  const timetableUrl = buildTimetableUrlFromPrintUrl(route.printUrl);
+  if (!timetableUrl) return out;
+
+  const ttRes = await fetch(timetableUrl, { redirect: "follow" });
+  if (!ttRes.ok) return out;
+  const ttHtml = await ttRes.text();
+  const routeLinks = parseRouteIndexLinks(ttHtml);
+  const targetNid = STOP_NID[route.toStop];
+
+  for (const link of routeLinks) {
+    const tmRaw = /\/tm:([^/]+)\//.exec(link)?.[1];
+    if (!tmRaw) continue;
+    const tm = decodeURIComponent(tmRaw);
+    const dayType = dayTypeFromTm(tm);
+    const dep = depTimeFromTm(tm);
+    if (out[dayType][dep] != null) continue;
+
+    const res = await fetch(`${BASE}${link}`, { redirect: "follow" });
+    if (!res.ok) continue;
+    const html = await res.text();
+    if (!targetNid) continue;
+    const arr = parseArrivalAtNidFromRouteHtml(html, targetNid);
+    let duration = null;
+    if (arr) {
+      duration = diffMinutes(dep, arr);
+    } else {
+      duration = parseDurationToTargetByParts(html, targetNid);
+    }
+    if (!Number.isFinite(duration) || duration < 5 || duration > 120) continue;
+    out[dayType][dep] = duration;
+  }
+
+  const hasAnyDuration = Object.values(out).some((m) => Object.keys(m).length > 0);
+  if (!hasAnyDuration || route.id === "K2S-S25") {
+    const timetable01Path = parseTimetable01Path(ttHtml);
+    if (timetable01Path) {
+      const t01Res = await fetch(`${BASE}${timetable01Path}`, { redirect: "follow" });
+      if (t01Res.ok) {
+        const t01Html = await t01Res.text();
+        const fallbackRouteLinks = parseRouteIndexLinks(t01Html);
+
+        let representative = null;
+        for (const link of fallbackRouteLinks) {
+          const tmRaw = /\/tm:([^/]+)\//.exec(link)?.[1];
+          const res = await fetch(`${BASE}${link}`, { redirect: "follow" });
+          if (!res.ok) continue;
+          const html = await res.text();
+          const duration = parseDurationFromRouteHtml(html);
+          if (!Number.isFinite(duration) || duration < 5 || duration > 120) continue;
+
+          if (tmRaw) {
+            const tm = decodeURIComponent(tmRaw);
+            const dayType = dayTypeFromTm(tm);
+            const dep = depTimeFromTm(tm);
+            if (out[dayType][dep] == null) out[dayType][dep] = duration;
+          } else if (representative == null) {
+            representative = duration;
+          }
+        }
+
+        if (representative != null && timetable) {
+          for (const dayType of ["weekday", "saturday", "holiday"]) {
+            const times = timetable[dayType] || [];
+            for (const dep of times) {
+              if (out[dayType][dep] == null) out[dayType][dep] = representative;
+            }
+          }
+        }
+      }
+    }
+  }
+
+  return out;
+}
+
 async function resolveRoutesWithLatestPrintUrls(routes) {
   const seeded = routes.map((r) => ({ ...r, ...parseCidNidFromPrintUrl(r.printUrl) }));
   const byId = new Map(seeded.map((r) => [r.id, r]));
@@ -364,8 +532,15 @@ async function main() {
     try {
       const { finalUrl, html } = await ensureValidPrintUrl(r.printUrl);
       const timetable = parsePrintHtmlToTimes(html);
+      const durationByTime = await fetchDurationByTimeFromOfficial(r, timetable);
+      const allDurations = Object.values(durationByTime)
+        .flatMap((x) => Object.values(x))
+        .filter((n) => Number.isFinite(n));
+      const approxDurationMins = median(allDurations) ?? r.approxDurationMins;
       routes.push({
         ...r,
+        approxDurationMins,
+        durationByTime,
         timetable,
         source: { printUrl: r.printUrl, finalUrl },
       });

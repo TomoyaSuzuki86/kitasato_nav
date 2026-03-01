@@ -84,6 +84,7 @@ function toTrip(route, direction) {
     platform: `${route.platform}番`,
     label: `${cfg.destination} 行`,
     durationMins: route.approxDurationMins || 25,
+    durationByTime: route.durationByTime || { weekday: {}, saturday: {}, holiday: {} },
     timetable: route.timetable || { weekday: [], saturday: [], holiday: [] }
   };
 }
@@ -100,9 +101,21 @@ function normalizeTimetables(raw) {
     const trip = toTrip(route, direction);
     if (!trip) continue;
 
-    normalized[direction].weekday.push({ ...trip, times: trip.timetable.weekday || [] });
-    normalized[direction].saturday.push({ ...trip, times: trip.timetable.saturday || [] });
-    normalized[direction].holiday.push({ ...trip, times: trip.timetable.holiday || [] });
+    normalized[direction].weekday.push({
+      ...trip,
+      times: trip.timetable.weekday || [],
+      durationByTimeMap: trip.durationByTime?.weekday || {}
+    });
+    normalized[direction].saturday.push({
+      ...trip,
+      times: trip.timetable.saturday || [],
+      durationByTimeMap: trip.durationByTime?.saturday || {}
+    });
+    normalized[direction].holiday.push({
+      ...trip,
+      times: trip.timetable.holiday || [],
+      durationByTimeMap: trip.durationByTime?.holiday || {}
+    });
   }
 
   return normalized;
@@ -134,12 +147,13 @@ function pickNextN(trips, nowMinutes, count = 2) {
   for (const trip of trips) {
     for (const depTime of trip.times) {
       const depMins = hhmmToMins(depTime);
+      const durationMins = trip.durationByTimeMap?.[depTime] ?? trip.durationMins;
       candidates.push({
         trip,
         depTime,
         depMins,
         etaMins: eta(nowMinutes, depMins),
-        arrTime: minsToHHMM(depMins + trip.durationMins)
+        arrTime: minsToHHMM(depMins + durationMins)
       });
     }
   }
@@ -149,7 +163,7 @@ function pickNextN(trips, nowMinutes, count = 2) {
   const uniqueCandidates = [];
   const seen = new Set();
   for (const cand of candidates) {
-    const key = `${cand.depTime}-${cand.trip.route}`;
+    const key = cand.depTime;
     if (!seen.has(key)) {
       uniqueCandidates.push(cand);
       seen.add(key);

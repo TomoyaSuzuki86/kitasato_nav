@@ -1,7 +1,12 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-  <rect width="512" height="512" rx="96" fill="#2563eb"/>
-  <rect x="96" y="112" width="320" height="280" rx="64" fill="#fff"/>
-  <rect x="148" y="202" width="216" height="88" rx="24" fill="#2563eb"/>
-  <circle cx="196" cy="344" r="28" fill="#2563eb"/>
-  <circle cx="316" cy="344" r="28" fill="#2563eb"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Kitasato Nav icon">
+  <rect width="512" height="512" rx="108" fill="#0ea5e9"/>
+  <g fill="none" stroke="#ffffff" stroke-width="28" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M160 112h192a56 56 0 0 1 56 56v176a56 56 0 0 1-56 56H160a56 56 0 0 1-56-56V168a56 56 0 0 1 56-56Z"/>
+    <path d="M160 188h192"/>
+    <path d="M160 252h192"/>
+    <path d="M184 400v28"/>
+    <path d="M328 400v28"/>
+  </g>
+  <circle cx="184" cy="340" r="16" fill="#ffffff"/>
+  <circle cx="328" cy="340" r="16" fill="#ffffff"/>
 </svg>
